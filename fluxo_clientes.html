@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fluxo de Clientes Planilha</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --bg: #121212;
+    --panel: #1e1e1e;
+    --card: #252525;
+    --text: #e0e0e0;
+    --muted: #a0a0a0;
+    --primary: #3b82f6;
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --border: #333;
+    --white: #ffffff;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  header.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+
+  .logo {
+    background: var(--primary);
+    color: white;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 8px;
+    margin-right: 15px;
+  }
+
+  .title { display: flex; align-items: center; }
+  h1 { margin: 0; font-size: 1.5rem; }
+  .subtitle { font-size: 0.85rem; color: var(--muted); }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+
+  h2 { margin-top: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+  h3 { margin-bottom: 10px; font-size: 1.1rem; }
+
+  .input {
+    background: #2a2a2a;
+    border: 1px solid var(--border);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+  }
+
+  .btn {
+    cursor: pointer;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:hover { opacity: 0.8; }
+  .btn-add { background: var(--primary); color: white; }
+
+  .card {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; min-width: 600px; }
+  th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+  th { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+  .highlight-23 {
+    border: 2px solid var(--warning);
+    background: rgba(245, 158, 11, 0.05);
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .summary-item {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+  }
+
+  .btn-zap {
+    background-color: #25D366;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-zap:hover { background-color: #128C7E; }
+
+  /* Modal WhatsApp */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(3px);
+  }
+  .modal-content {
+    background: var(--card);
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  }
+  .msg-option {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--white);
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+  .msg-option:hover { 
+    background: rgba(59, 130, 246, 0.1); 
+    border-color: var(--primary); 
+    transform: translateX(5px);
+  }
+  .msg-option strong { color: var(--primary); display:block; margin-bottom:4px; }
+  .msg-option small { color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header class="app-header">
+  <div class="title">
+    <div class="logo">ES</div>
+    <div>
+      <h1>Fluxo de Clientes Planilha</h1>
+      <div class="subtitle">Analisador de Clientes (Baseado em Planilha Real)</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="panel">
+  <h2><i class="fa-solid fa-file-excel"></i> Analisador de Excel</h2>
+  
+  <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div style="flex:2; min-width:200px;">
+      <label style="font-size:0.85rem; color:var(--muted);">Arquivo Excel:</label>
+      <input type="file" id="inputExcel" accept=".xlsx, .xls, .csv" class="input">
+    </div>
+    <div style="flex:1; min-width:130px;">
+      <label style="font-size:0.85rem; color:var(--muted);">Data da Pesquisa:</label>
+      <input type="date" id="dataPesquisa" class="input">
+    </div>
+    <div style="flex:1; min-width:100px;">
+      <label style="font-size:0.85rem; color:var(--muted);">Últimos X:</label>
+      <input type="number" id="qtdUltimos" class="input" placeholder="Ex: 10">
+    </div>
+    <div style="flex:1; min-width:100px;">
+      <label style="font-size:0.85rem; color:var(--muted);">Linha Inicial:</label>
+      <input type="number" id="linhaInicial" class="input" placeholder="Ex: 2">
+    </div>
+    <div style="flex:1; min-width:100px;">
+      <label style="font-size:0.85rem; color:var(--muted);">Linha Final:</label>
+      <input type="number" id="linhaFinal" class="input" placeholder="Ex: 20">
+    </div>
+  </div>
+
+  <button class="btn btn-add" onclick="analisarExcel()">
+    <i class="fa-solid fa-magnifying-glass"></i> Analisar Planilha
+  </button>
+
+  <div id="resultadoArea" style="margin-top:25px; display:none;">
+    
+    <div class="summary-grid">
+      <div class="summary-item" style="border-top: 4px solid var(--danger);">
+        <div style="color: var(--danger); font-weight: bold;">ATRASADOS</div>
+        <div id="countAtrasados" style="font-size: 1.5rem; margin-top: 5px;">0</div>
+      </div>
+      <div class="summary-item" style="border-top: 4px solid var(--primary);">
+        <div style="color: var(--primary); font-weight: bold;">EM DIA (OK)</div>
+        <div id="countOK" style="font-size: 1.5rem; margin-top: 5px;">0</div>
+      </div>
+      <div class="summary-item" style="border-top: 4px solid var(--success);">
+        <div style="color: var(--success); font-weight: bold;">SUPER CLIENTES</div>
+        <div id="countSuper" style="font-size: 1.5rem; margin-top: 5px;">0</div>
+      </div>
+    </div>
+
+    <!-- GRÁFICO -->
+    <div class="card" style="margin-bottom: 25px;">
+      <h3 style="margin-top:0;"><i class="fa-solid fa-chart-pie"></i> Distribuição de Clientes</h3>
+      <div style="position: relative; height: 300px; width: 100%;">
+        <canvas id="fluxoChart"></canvas>
+      </div>
+    </div>
+
+    <!-- TABELA 23 DIAS -->
+    <div id="area23Dias" style="margin-bottom:30px; display:none;">
+      <h3 style="color: var(--warning);"><i class="fa-solid fa-calendar-day"></i> Clientes com 23 Dias de Empréstimo</h3>
+      <div class="card highlight-23" id="tabela23Dias"></div>
+    </div>
+
+    <!-- TABELA ATRASADOS -->
+    <div id="areaAtrasados" style="margin-bottom:25px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
+        <h3 style="color: var(--danger); margin:0;"><i class="fa-solid fa-circle-xmark"></i> Lista: Atrasados</h3>
+        <div style="display:flex; gap:10px;">
+          <button class="btn" style="background: #6366f1; font-size:0.8rem;" onclick="copiarAtrasados()">
+            <i class="fa-solid fa-copy"></i> Copiar Lista
+          </button>
+          <button class="btn" style="background: var(--danger); font-size:0.8rem;" onclick="exportarAtrasadosPDF()">
+            <i class="fa-solid fa-file-pdf"></i> Exportar PDF (A4)
+          </button>
+        </div>
+      </div>
+      <div class="card" id="tabelaAtrasados"></div>
+    </div>
+
+    <!-- TABELA OK -->
+    <div style="margin-bottom:25px;">
+      <h3 style="color: var(--primary);"><i class="fa-solid fa-circle-check"></i> Lista: Em Dia (OK)</h3>
+      <div class="card" id="tabelaOK"></div>
+    </div>
+
+    <!-- TABELA SUPER -->
+    <div style="margin-bottom:25px;">
+      <h3 style="color: var(--success);"><i class="fa-solid fa-star"></i> Lista: Super Clientes</h3>
+      <div class="card" id="tabelaSuper"></div>
+    </div>
+
+  </div>
+
+  <div id="mensagemVazia" style="text-align:center; padding:40px; color:var(--muted);">
+    <i class="fa-solid fa-file-circle-question" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
+    Carregue a planilha para visualizar a análise.
+  </div>
+</section>
+
+<!-- Modal WhatsApp -->
+<div id="modalZap" class="modal-overlay">
+  <div class="modal-content">
+    <h3 style="margin-top:0; margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+      <i class="fa-brands fa-whatsapp" style="color:#25D366;"></i> Escolha a Mensagem
+    </h3>
+    <div id="msgList"></div>
+    <button class="btn" onclick="fecharModalZap()" style="margin-top:15px; width:100%; justify-content:center; background:transparent; border:1px solid var(--border);">
+      Cancelar
+    </button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const hoje = new Date().toISOString().split('T')[0];
+  document.getElementById('dataPesquisa').value = hoje;
+});
+
+let chartInstance = null;
+
+function analisarExcel() {
+  const fileInput = document.getElementById('inputExcel');
+  if (!fileInput.files.length) {
+    alert("Por favor, selecione um arquivo Excel.");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+      processarDados(workbook);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao processar o arquivo.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function processarDados(workbook) {
+  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  let data = XLSX.utils.sheet_to_json(worksheet);
+  
+  // Filtro por Intervalo de Linhas (Baseado no índice do array + 2 para alinhar com o Excel)
+  const lIni = parseInt(document.getElementById('linhaInicial').value);
+  const lFim = parseInt(document.getElementById('linhaFinal').value);
+  
+  if (!isNaN(lIni) || !isNaN(lFim)) {
+    data = data.filter((_, index) => {
+      const numLinhaExcel = index + 2; // +2 porque a primeira linha de dados no JSON é a 2 no Excel
+      const acimaIni = isNaN(lIni) || numLinhaExcel >= lIni;
+      const abaixoFim = isNaN(lFim) || numLinhaExcel <= lFim;
+      return acimaIni && abaixoFim;
+    });
+  }
+
+  // Filtro por Últimos X Clientes
+  const qtdUlt = parseInt(document.getElementById('qtdUltimos').value);
+  if (!isNaN(qtdUlt) && qtdUlt > 0) {
+    data = data.slice(-qtdUlt);
+  }
+  
+  const inputData = document.getElementById('dataPesquisa');
+  let dataReferencia = new Date();
+  if (inputData && inputData.value) {
+    const p = inputData.value.split('-');
+    dataReferencia = new Date(p[0], p[1]-1, p[2]);
+  }
+  dataReferencia.setHours(0, 0, 0, 0);
+
+  let atrasados = [];
+  let ok = [];
+  let superClientes = [];
+  let clientes23Dias = [];
+
+  data.forEach(row => {
+    // Helper para buscar colunas ignorando maiúsculas/minúsculas
+    const getVal = (keys) => {
+      const foundKey = Object.keys(row).find(k => keys.includes(k.toUpperCase()));
+      return foundKey ? row[foundKey] : null;
+    };
+
+    const nome = getVal(['CLIENTE', 'NOME']) || 'N/A';
+    const dataInicioRaw = getVal(['DATA INICIAL', 'INICIO']);
+    const dataFimRaw = getVal(['DATA FINAL', 'FIM']);
+    const diariasPagas = parseInt(getVal(['DIÁRIAS', 'DIARIAS', 'PAGOS'])) || 0;
+    const telefone = getVal(['TELEFONE', 'CELULAR', 'WHATSAPP']);
+
+    if (!dataInicioRaw) return;
+
+    const dInicio = new Date(dataInicioRaw);
+    dInicio.setHours(0,0,0,0);
+    
+    let dFim = null;
+    if (dataFimRaw) {
+      dFim = new Date(dataFimRaw);
+      dFim.setHours(0,0,0,0);
+    }
+
+    let dataLimite = new Date(dataReferencia);
+    if (dFim && dFim < dataReferencia) {
+      dataLimite = dFim;
+    }
+
+    const diffTime = dataLimite.getTime() - dInicio.getTime();
+    const diasCorridos = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
+
+    if (diasCorridos < 1) return;
+
+    const saldo = diariasPagas - diasCorridos;
+    const item = { 
+      nome, 
+      telefone,
+      inicio: dInicio.toLocaleDateString('pt-BR'),
+      fim: dFim ? dFim.toLocaleDateString('pt-BR') : '-',
+      dias: diasCorridos, 
+      pagos: diariasPagas, 
+      saldo
+    };
+
+    // Nova Lógica: Se tem mais de 20 dias, vai para atrasados (devido a multas/pendências)
+    // Caso contrário, segue a lógica normal de saldo
+    if (diasCorridos > 20 || saldo < 0) {
+      atrasados.push(item);
+    } else if (saldo === 0) {
+      ok.push(item);
+    } else {
+      superClientes.push(item);
+    }
+
+    if (diasCorridos === 23) {
+      clientes23Dias.push(item);
+    }
+  });
+
+  // Ordenar por saldo decrescente
+  const sortFn = (a, b) => b.saldo - a.saldo;
+  atrasados.sort(sortFn);
+  ok.sort(sortFn);
+  superClientes.sort(sortFn);
+  clientes23Dias.sort(sortFn);
+
+  globalAtrasados = atrasados;
+  exibirResultados(atrasados, ok, superClientes, clientes23Dias);
+}
+
+function exibirResultados(atrasados, ok, superClientes, clientes23Dias) {
+  document.getElementById('mensagemVazia').style.display = 'none';
+  document.getElementById('resultadoArea').style.display = 'block';
+
+  document.getElementById('countAtrasados').innerText = atrasados.length;
+  document.getElementById('countOK').innerText = ok.length;
+  document.getElementById('countSuper').innerText = superClientes.length;
+
+  const area23 = document.getElementById('area23Dias');
+  if (clientes23Dias.length > 0) {
+    area23.style.display = 'block';
+    document.getElementById('tabela23Dias').innerHTML = buildTable(clientes23Dias);
+  } else {
+    area23.style.display = 'none';
+  }
+
+  document.getElementById('tabelaAtrasados').innerHTML = atrasados.length > 0 ? buildTable(atrasados) : '<p style="color:var(--muted)">Nenhum cliente em atraso.</p>';
+  document.getElementById('tabelaOK').innerHTML = ok.length > 0 ? buildTable(ok) : '<p style="color:var(--muted)">Nenhum cliente rigorosamente em dia.</p>';
+  document.getElementById('tabelaSuper').innerHTML = superClientes.length > 0 ? buildTable(superClientes) : '<p style="color:var(--muted)">Nenhum super cliente identificado.</p>';
+
+  renderChart(atrasados.length, ok.length, superClientes.length);
+}
+
+function buildTable(lista) {
+  let html = `<table><thead><tr><th>Nome</th><th>Início</th><th>Fim</th><th>Dias</th><th>Pagos</th><th>Saldo</th><th>Ações</th></tr></thead><tbody>`;
+  lista.forEach(i => {
+    let saldoCor = i.saldo < 0 ? 'var(--danger)' : (i.saldo > 0 ? 'var(--success)' : 'var(--primary)');
+    let saldoTexto = i.saldo > 0 ? `+${i.saldo}` : i.saldo;
+    
+    html += `<tr>
+      <td><strong>${i.nome}</strong></td>
+      <td>${i.inicio}</td>
+      <td>${i.fim}</td>
+      <td>${i.dias}</td>
+      <td>${i.pagos}</td>
+      <td style="color:${saldoCor}; font-weight:bold;">${saldoTexto}</td>
+      <td>
+        <button class="btn-zap" onclick="enviarWhatsapp('${i.nome}', '${i.telefone}', ${i.saldo}, this)">
+          <i class="fa-brands fa-whatsapp"></i>
+        </button>
+      </td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  return html;
+}
+
+function renderChart(atrasados, ok, superClientes) {
+  const ctx = document.getElementById('fluxoChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+  
+  chartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Atrasados', 'Em Dia (OK)', 'Super Clientes'],
+      datasets: [{
+        data: [atrasados, ok, superClientes],
+        backgroundColor: ['#ef4444', '#3b82f6', '#22c55e'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#a0a0a0' } }
+      }
+    }
+  });
+}
+
+let globalAtrasados = [];
+
+function copiarAtrasados() {
+  if (globalAtrasados.length === 0) {
+    alert("Não há clientes atrasados para copiar.");
+    return;
+  }
+  
+  let texto = "LISTA DE CLIENTES EM ATRASO:\n\n";
+  globalAtrasados.forEach(c => {
+    texto += `• ${c.nome}: Saldo ${c.saldo} diárias\n`;
+  });
+  
+  navigator.clipboard.writeText(texto).then(() => {
+    alert("Lista de atrasados copiada para a área de transferência!");
+  }).catch(err => {
+    console.error('Erro ao copiar: ', err);
+  });
+}
+
+function exportarAtrasadosPDF() {
+  if (globalAtrasados.length === 0) {
+    alert("Não há clientes atrasados para exportar.");
+    return;
+  }
+
+  const dataRef = document.getElementById('dataPesquisa').value;
+  const dataFormatada = new Date(dataRef).toLocaleDateString('pt-BR');
+
+  // Criar uma janela temporária para impressão
+  const win = window.open('', '_blank');
+  
+  let html = `
+    <html>
+    <head>
+      <title>Relatório de Atrasados - ${dataFormatada}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #ef4444; margin-bottom: 5px; }
+        p.sub { text-align: center; margin-bottom: 20px; color: #666; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f3f4f6; }
+        .center { text-align: center; }
+        .bold-red { color: #ef4444; font-weight: bold; }
+        @media print {
+          @page { margin: 1cm; }
+          button { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Relatório de Atrasados</h1>
+      <p class="sub">Data de Referência: ${dataFormatada}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th class="center">Início</th>
+            <th class="center">Dias</th>
+            <th class="center">Pagos</th>
+            <th class="center">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  globalAtrasados.forEach(i => {
+    html += `
+      <tr>
+        <td>${i.nome}</td>
+        <td class="center">${i.inicio}</td>
+        <td class="center">${i.dias}</td>
+        <td class="center">${i.pagos}</td>
+        <td class="center bold-red">${i.saldo}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+        </tbody>
+      </table>
+      <p style="margin-top:20px; font-size:10px; color:#999; text-align:right;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+      <script>
+        window.onload = function() { 
+          window.print(); 
+          setTimeout(function() { window.close(); }, 500);
+        };
+      <\/script>
+    </body>
+    </html>
+  `;
+
+  win.document.write(html);
+  win.document.close();
+}
+
+let currentZapParams = null;
+
+function enviarWhatsapp(nome, telefone, saldo, btnElement) {
+  if (!telefone || telefone === 'null' || telefone === 'undefined') {
+    alert("Telefone não identificado na planilha.");
+    return;
+  }
+  let num = telefone.toString().replace(/\D/g, '');
+  if (num.length > 9 && !num.startsWith('55')) num = '55' + num;
+  
+  if (saldo >= 0) {
+    const msg = `Olá ${nome}, parabéns! Seu pagamento está em dia.`;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, 'janelaWhatsapp');
+    marcarComoEnviado(btnElement);
+  } else {
+    currentZapParams = { nome, num, dias: Math.abs(saldo), btn: btnElement };
+    abrirModalZap();
+  }
+}
+
+function abrirModalZap() {
+  const modal = document.getElementById('modalZap');
+  const list = document.getElementById('msgList');
+  const { nome, dias } = currentZapParams;
+  
+  const opcoes = [
+    { titulo: "Cobrança Amigável", texto: `Olá ${nome}, tudo bem? Notamos uma pendência de ${dias} diárias. Podemos agendar o pagamento?` },
+    { titulo: "Lembrete Simples", texto: `Oi ${nome}, passando para lembrar das ${dias} diárias em aberto. Aguardo retorno.` },
+    { titulo: "Cobrança Formal", texto: `Olá ${nome}, Bom dia! 
+*Oferta especial pra ficar livre das dívidas!*
+Estou entrando em contato para cobrar o valor do empréstimo que ficou pendente.
+Já passou o prazo combinado, então preciso que o pagamento seja feito ainda esta semana.
+Peço que me confirme a data para regularização. Obrigada(o). ${dias} diárias pendentes.` }
+  ];
+
+  list.innerHTML = '';
+  opcoes.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'msg-option';
+    btn.innerHTML = `<strong>${opt.titulo}</strong><small>${opt.texto}</small>`;
+    btn.onclick = () => {
+      window.open(`https://wa.me/${currentZapParams.num}?text=${encodeURIComponent(opt.texto)}`, 'janelaWhatsapp');
+      marcarComoEnviado(currentZapParams.btn);
+      fecharModalZap();
+    };
+    list.appendChild(btn);
+  });
+
+  modal.style.display = 'flex';
+}
+
+function fecharModalZap() {
+  document.getElementById('modalZap').style.display = 'none';
+}
+
+function marcarComoEnviado(btn) {
+  if (btn) {
+    btn.style.backgroundColor = '#6b7280'; // Cor cinza
+    btn.innerHTML = '<i class="fa-solid fa-check"></i>'; // Ícone de check
+    btn.disabled = true; // Desabilita o clique
+    btn.style.cursor = 'not-allowed';
+    btn.title = "Mensagem já enviada";
+  }
+}
+</script>
+</body>
+</html>
